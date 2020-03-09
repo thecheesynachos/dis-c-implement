@@ -18,14 +18,14 @@ private:
     void split(DataType *newObject);
 
 public:
-    DataType *featureObj;
-    float distToParent;
     Node *parent;
     bool isLeaf;
     Colour colour;
+    int size;
+    int filledAmount;
     
-    Node(DataType *featureObj, Node<DataType, DistanceFunction> *parent, float distToParent);
-    std::vector<DataType> range(DataType *object, float searchRadius);
+    Node(Node<DataType, DistanceFunction> *parentNode, int sz);
+    int range(DataType *object, float searchRadius);
     void insert(DataType *newObject);
 };
 
@@ -35,20 +35,53 @@ template <
     // typename Node
 >
 class RoutingNode : public Node<DataType, DistanceFunction> {
-public:
-    float coverRadius;
+    private:
+        RoutingObject<DataType, DistanceFunction> *storedRoutingObjects;
 
-    RoutingNode(DataType *featureObj, float coverRadius, Node<DataType, DistanceFunction> *parent, float distToParent);
+    public:
+        RoutingNode(Node<DataType, DistanceFunction> *parentNode, int sz);
 };
 
 template <
     typename DataType,
     typename DistanceFunction
-    // typename Node
 >
 class LeafNode : public Node<DataType, DistanceFunction> {
+    private:
+        LeafObject<DataType, DistanceFunction> *storedLeafObjects;
+
+    public:
+        LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz);
+};
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class RoutingObject<DataType, DistanceFunction>{
+private:
+    DataType *featureObj;
+    float coverRadius;
+    float distToParent;
+    RoutingNode<DataType, DistanceFunction> *childRoot;
+    Colour colour;
+
 public:
-    LeafNode(DataType *featureObj, Node<DataType, DistanceFunction> *parent, float distToParent);
+    RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
+};
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class LeafObject<DataType, DistanceFunction>{
+    private:
+        DataType *featureObj;
+        float distToParent;
+        Colour = colour;
+
+    public:
+        LeafObject(DataType *featureObject, float distanceToParent)
 };
 
 #endif

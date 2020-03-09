@@ -1,20 +1,22 @@
 #include "mtree.h"
 
-//Node constructure
+//Node constructor
 template <
     typename DataType,
     typename DistanceFunction
 >
-Node<DataType, DistanceFunction>::Node(DataType *fO, Node<DataType, DistanceFunction> *pr, float dTP):
-featureObj(fO), parent(pr), distToParent(dTP)
+Node<DataType, DistanceFunction>::Node(Node<DataType, DistanceFunction> *parentNode, int sz);
+parent(parentNode), colour(WHITE), size(sz), filledAmount(0)
 {}
 
 template <
     typename DataType,
     typename DistanceFunction
 >
-std::vector<DataType> Node<DataType, DistanceFunction>::range(DataType *object, float searchRadius){
-    return NULL;
+int Node<DataType, DistanceFunction>::range(DataType *object, float searchRadius){
+    if (this->isLeaf) {
+
+    }
 }
 template <
     typename DataType,
@@ -35,15 +37,35 @@ template <
     typename DataType,
     typename DistanceFunction
 >
-RoutingNode<DataType, DistanceFunction>::RoutingNode(DataType *fO, float cR, Node<DataType, DistanceFunction> *pr, float dTP):
-Node<DataType, DistanceFunction>(fO, pr, dTP), coverRadius(cR)
-{}
+RoutingNode<DataType, DistanceFunction>::RoutingNode(Node<DataType, DistanceFunction> *parentNode, int sz):
+Node<DataType, DistanceFunction>(parentNode, sz)
+{
+    this->storedRoutingObjects = new RoutingObject<DataType, DistanceFunction>[this->size];
+}
 
 //LeafNode constructure
 template <
     typename DataType,
     typename DistanceFunction
 >
-LeafNode<DataType, DistanceFunction>::LeafNode(DataType *fO, Node<DataType, DistanceFunction> *pr, float dTP):
-Node<DataType, DistanceFunction>(fO, pr, dTP)
+LeafNode<DataType, DistanceFunction>::LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz):
+Node<DataType, DistanceFunction>(parentNode, sz)
+{
+    this->storedLeafObjects = new LeafObject<DataType, DistanceFunction>[this->size];
+}
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+RoutingObject<DataType, DistanceFunction>::RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot):
+featureObj(featureObject), coverRadius(covRad), distToParent(distToPar), childRoot(chdRoot), colour(white)
+{}
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+LeafObject<DataType, DistanceFunction>::LeafObject(DataType *featureObject, float distanceToParent):
+featureObj(featureObject), distToParent(distanceToParent), colour(WHITE)
 {}
