@@ -67,11 +67,42 @@ template <
 >
 void Node<DataType, DistanceFunction>::insert(DataType *newObject){
 
-    if(isLeaf){
-
+    if(! this->isLeaf){
+        int minCov = INT_MAX;
+        int posCov = -1;
+        int min = INT_MAX;
+        int pos = -1;
+        for(int i = 0; i < filledAmount; i++){
+            dist = DistanceFunction(newObject, this->storedObjects[i]);
+            //find min distance in cover radius
+            if(dist < this->storedObjects[i].coverRadius){
+                minCov = dist < minCov ? dist:minCov;
+                posCov = dist <= minCov ? i:posCov;
+            }
+            //find min distance
+            min = dist < min ? dist:min;
+            pos = dist <= min ? i:pos;
+        }
+        //if exist a radius that cover object
+        if(posCov != -1){
+            this->storedObjects[posCov].insert(newObject);
+        }
+        //No node cover our new object, use min distance
+        else{
+            //set new cover radius for the closest node
+            this->storedObjects[pos].coverRadius = min;
+            this.storedObjects[pos].insert(newObject);
+        }
     }
     else{
-
+        //check for available space
+        if(this->filledAmount < this->size){
+            this->filledAmount++;
+            storedObjects[this->filledAmount] = newObject; 
+        }
+        else{
+            //TODO: split
+        }
     }
 }
 
