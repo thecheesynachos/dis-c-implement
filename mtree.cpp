@@ -5,8 +5,8 @@ template <
     typename DataType,
     typename DistanceFunction
 >
-Node<DataType, DistanceFunction>::Node(DataType *featureObj, Node *parent, float distToParent):
-featureObj(featureObj), parent(parent), distToParent(distToParent)
+Node<DataType, DistanceFunction>::Node(DataType *fO, Node<DataType, DistanceFunction> *pr, float dTP):
+featureObj(fO), parent(pr), distToParent(dTP)
 {}
 
 template <
@@ -21,6 +21,7 @@ template <
     typename DistanceFunction
 >
 void Node<DataType, DistanceFunction>::insert(DataType *newObject){
+    
     if(isLeaf){
 
     }
@@ -34,8 +35,8 @@ template <
     typename DataType,
     typename DistanceFunction
 >
-RoutingNode<DataType, DistanceFunction>::RoutingNode(DataType *featureObj, float coverRadius, Node<DataType, DistanceFunction> *parent, float distToParent):
-Node<DataType, DistanceFunction>(featureObj, parent, distToParent), coverRadius(coverRadius)
+RoutingNode<DataType, DistanceFunction>::RoutingNode(DataType *fO, float cR, Node<DataType, DistanceFunction> *pr, float dTP):
+Node<DataType, DistanceFunction>(fO, pr, dTP), coverRadius(cR)
 {}
 
 //LeafNode constructure
@@ -43,6 +44,6 @@ template <
     typename DataType,
     typename DistanceFunction
 >
-LeafNode<DataType, DistanceFunction>::LeafNode(DataType *featureObj, Node<DataType, DistanceFunction> *parent, float distToParent):
-Node<DataType, DistanceFunction>(featureObj, parent, distToParent)
+LeafNode<DataType, DistanceFunction>::LeafNode(DataType *fO, Node<DataType, DistanceFunction> *pr, float dTP):
+Node<DataType, DistanceFunction>(fO, pr, dTP)
 {}

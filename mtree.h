@@ -8,11 +8,6 @@ enum Colour {
     GREY = 1,
     WHITE = 2,
 };
-template <
-    typename DataType,
-    typename DistanceFunction
->
-class Node;
 
 template <
     typename DataType,
