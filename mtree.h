@@ -14,35 +14,37 @@ template <
 >
 class RoutingNode;
 
+// OBJECTS
+
 template <
         typename DataType,
         typename DistanceFunction
 >
-class RoutingObject{
+class Object{
 private:
     DataType *featureObj;
-    float coverRadius;
     float distToParent;
-    RoutingNode<DataType, DistanceFunction> *childRoot;
     Colour colour;
+
+public:
+    Object<DataType, DistanceFunction>(DataType *featureObject, float distanceToParent);
+};
+
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class RoutingObject : public Object<DataType, DistanceFunction> {
+private:
+    float coverRadius;
+    RoutingNode<DataType, DistanceFunction> *childRoot;
 
 public:
     RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
 };
 
-template <
-        typename DataType,
-        typename DistanceFunction
->
-class LeafObject{
-    private:
-        DataType *featureObj;
-        float distToParent;
-        Colour colour;
-
-    public:
-        LeafObject(DataType *featureObject, float distanceToParent);
-};
+// NODE TYPES
 
 template <
     typename DataType,
@@ -58,6 +60,7 @@ public:
     Colour colour;
     int size;
     int filledAmount;
+    Object<DataType, DistanceFunction> *storedObjects;
     
     Node(Node<DataType, DistanceFunction> *parentNode, int sz);
     int range(DataType *object, float searchRadius);
@@ -70,9 +73,6 @@ template <
     // typename Node
 >
 class RoutingNode : public Node<DataType, DistanceFunction> {
-    private:
-        RoutingObject<DataType, DistanceFunction> *storedRoutingObjects;
-
     public:
         RoutingNode(Node<DataType, DistanceFunction> *parentNode, int sz);
 };
@@ -82,9 +82,6 @@ template <
     typename DistanceFunction
 >
 class LeafNode : public Node<DataType, DistanceFunction> {
-    private:
-        LeafObject<DataType, DistanceFunction> *storedLeafObjects;
-
     public:
         LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz);
 };
