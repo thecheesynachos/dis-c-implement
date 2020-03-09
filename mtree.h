@@ -8,6 +8,11 @@ enum Colour {
     GREY = 1,
     WHITE = 2,
 };
+template <
+    typename DataType,
+    typename DistanceFunction
+>
+class Node;
 
 template <
     typename DataType,
@@ -15,7 +20,7 @@ template <
 >
 class Node {
 private:
-    split(DataType *newObject);
+    void split(DataType *newObject);
 
 public:
     DataType *featureObj;
@@ -24,29 +29,31 @@ public:
     bool isLeaf;
     Colour colour;
     
-    Node(DataType *featureObj, Node *parent, float distToParent);
-    std::vector<DataType> *range(DataType *object, float searchRadius);
+    Node(DataType *featureObj, Node<DataType, DistanceFunction> *parent, float distToParent);
+    std::vector<DataType> range(DataType *object, float searchRadius);
     void insert(DataType *newObject);
 };
 
 template <
     typename DataType,
     typename DistanceFunction
+    // typename Node
 >
-class RoutingNode : public Node {
+class RoutingNode : public Node<DataType, DistanceFunction> {
 public:
     float coverRadius;
 
-    RoutingNode(DataType *featureObj, float coverRadius, Node *parent, float distToParent);
+    RoutingNode(DataType *featureObj, float coverRadius, Node<DataType, DistanceFunction> *parent, float distToParent);
 };
 
 template <
     typename DataType,
     typename DistanceFunction
+    // typename Node
 >
-class LeafNode : public Node {
+class LeafNode : public Node<DataType, DistanceFunction> {
 public:
-    LeafNode(DataType *featureObj, Node *parent, float distToParent);
+    LeafNode(DataType *featureObj, Node<DataType, DistanceFunction> *parent, float distToParent);
 };
 
 #endif
