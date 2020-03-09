@@ -42,7 +42,10 @@ template <
 >
 Object<DataType, DistanceFunction>::Object(DataType *featureObject, float distanceToParent) :
 featureObj(featureObject), distToParent(distanceToParent), colour(WHITE)
-{}
+{
+    coverRadius = 0.0;
+    childRoot = nullptr;
+}
 
 template <
         typename DataType,
@@ -50,8 +53,11 @@ template <
 >
 RoutingObject<DataType, DistanceFunction>::RoutingObject(DataType *featureObject, float covRad, float distToPar,
                                                          RoutingNode<DataType, DistanceFunction> chdRoot) :
-Object<DataType, DistanceFunction>(featureObject, distToPar), coverRadius(covRad), childRoot(chdRoot)
-{}
+Object<DataType, DistanceFunction>(featureObject, distToPar)
+{
+    this->coverRadius = covRad;
+    this->distToParent = chdRoot;
+}
 
 // OTHER FUNCTIONS
 
@@ -81,7 +87,7 @@ void Node<DataType, DistanceFunction>::insert(DataType *newObject){
 //    } else {
 //        int count = 0;
 //        for (int i = 0; i < this->filledAmount; i++) {
-//            RoutingObject<DataType, DistanceFunction> ro = this.
+//            Object<DataType, DistanceFunction> ro = this->storedObjects[i];
 //            float objToParent = 0.0 // compute distance from object to parent of this node
 //            float d = std::abs()
 //        }

@@ -25,6 +25,8 @@ private:
     DataType *featureObj;
     float distToParent;
     Colour colour;
+    float coverRadius;
+    RoutingNode<DataType, DistanceFunction> *childRoot;
 
 public:
     Object<DataType, DistanceFunction>(DataType *featureObject, float distanceToParent);
@@ -36,10 +38,6 @@ template <
         typename DistanceFunction
 >
 class RoutingObject : public Object<DataType, DistanceFunction> {
-private:
-    float coverRadius;
-    RoutingNode<DataType, DistanceFunction> *childRoot;
-
 public:
     RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
 };
