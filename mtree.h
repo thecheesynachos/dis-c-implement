@@ -8,6 +8,41 @@ enum Colour {
     GREY = 1,
     WHITE = 2,
 };
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class RoutingNode;
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class RoutingObject{
+private:
+    DataType *featureObj;
+    float coverRadius;
+    float distToParent;
+    RoutingNode<DataType, DistanceFunction> *childRoot;
+    Colour colour;
+
+public:
+    RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
+};
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
+class LeafObject{
+    private:
+        DataType *featureObj;
+        float distToParent;
+        Colour colour;
+
+    public:
+        LeafObject(DataType *featureObject, float distanceToParent);
+};
 
 template <
     typename DataType,
@@ -52,36 +87,6 @@ class LeafNode : public Node<DataType, DistanceFunction> {
 
     public:
         LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz);
-};
-
-template <
-        typename DataType,
-        typename DistanceFunction
->
-class RoutingObject<DataType, DistanceFunction>{
-private:
-    DataType *featureObj;
-    float coverRadius;
-    float distToParent;
-    RoutingNode<DataType, DistanceFunction> *childRoot;
-    Colour colour;
-
-public:
-    RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
-};
-
-template <
-        typename DataType,
-        typename DistanceFunction
->
-class LeafObject<DataType, DistanceFunction>{
-    private:
-        DataType *featureObj;
-        float distToParent;
-        Colour = colour;
-
-    public:
-        LeafObject(DataType *featureObject, float distanceToParent)
 };
 
 #endif

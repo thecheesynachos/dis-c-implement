@@ -5,7 +5,7 @@ template <
     typename DataType,
     typename DistanceFunction
 >
-Node<DataType, DistanceFunction>::Node(Node<DataType, DistanceFunction> *parentNode, int sz);
+Node<DataType, DistanceFunction>::Node(Node<DataType, DistanceFunction> *parentNode, int sz):
 parent(parentNode), colour(WHITE), size(sz), filledAmount(0)
 {}
 
@@ -59,7 +59,7 @@ template <
         typename DistanceFunction
 >
 RoutingObject<DataType, DistanceFunction>::RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot):
-featureObj(featureObject), coverRadius(covRad), distToParent(distToPar), childRoot(chdRoot), colour(white)
+featureObj(featureObject), coverRadius(covRad), distToParent(distToPar), childRoot(chdRoot), colour(WHITE)
 {}
 
 template <
