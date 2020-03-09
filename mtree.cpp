@@ -21,7 +21,9 @@ template <
 >
 RoutingNode<DataType, DistanceFunction>::RoutingNode(Node<DataType, DistanceFunction> *parentNode, int sz):
 Node<DataType, DistanceFunction>(parentNode, sz)
-{}
+{
+    this->isLeaf = false;
+}
 
 //LeafNode constructor
 template <
@@ -30,7 +32,9 @@ template <
 >
 LeafNode<DataType, DistanceFunction>::LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz):
 Node<DataType, DistanceFunction>(parentNode, sz)
-{}
+{
+    this->isLeaf = true;
+}
 
 template <
         typename DataType,
