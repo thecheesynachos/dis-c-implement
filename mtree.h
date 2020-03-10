@@ -25,9 +25,11 @@ private:
     float coverRadius;
     RoutingNode<DataType> *childRoot;
     Node<DataType> *containedNode;
+    std::function<float (DataType, DataType)> distanceFunction;
 
 public:
     Object(Node<DataType> containedNd, DataType *featureObject, float distanceToParent);
+    distance(Object<DataType> )
 };
 
 
