@@ -12,6 +12,12 @@ template <
         typename DataType,
         typename DistanceFunction
 >
+class Node;
+
+template <
+        typename DataType,
+        typename DistanceFunction
+>
 class RoutingNode;
 
 // OBJECTS
@@ -27,9 +33,10 @@ private:
     Colour colour;
     float coverRadius;
     RoutingNode<DataType, DistanceFunction> *childRoot;
+    Node<DataType, DistanceFunction> *containedNode;
 
 public:
-    Object<DataType, DistanceFunction>(DataType *featureObject, float distanceToParent);
+    Object(Node<DataType, DistanceFunction> containedNd, DataType *featureObject, float distanceToParent);
 };
 
 
@@ -39,7 +46,8 @@ template <
 >
 class RoutingObject : public Object<DataType, DistanceFunction> {
 public:
-    RoutingObject(DataType *featureObject, float covRad, float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
+    RoutingObject(Node<DataType, DistanceFunction> containedNd, DataType *featureObject, float covRad,
+            float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
 };
 
 // NODE TYPES
@@ -53,14 +61,15 @@ private:
     void split(DataType *newObject);
 
 public:
-    Node *parent;
+    Object<DataType, DistanceFunction> *parent;
     bool isLeaf;
     Colour colour;
     int size;
     int filledAmount;
-    Object<DataType, DistanceFunction> *storedObjects;
-    
-    Node(Node<DataType, DistanceFunction> *parentNode, int sz);
+    std::vector<Object<DataType, DistanceFunction> > storedObjects;
+
+    bool isFilled();
+    Node(Object<DataType, DistanceFunction> *parentObject, int sz);
     int range(DataType *object, float searchRadius);
     void insert(DataType *newObject);
 };
@@ -72,7 +81,7 @@ template <
 >
 class RoutingNode : public Node<DataType, DistanceFunction> {
     public:
-        RoutingNode(Node<DataType, DistanceFunction> *parentNode, int sz);
+        RoutingNode(Object<DataType, DistanceFunction> *parentObject, int sz);
 };
 
 template <
@@ -81,7 +90,7 @@ template <
 >
 class LeafNode : public Node<DataType, DistanceFunction> {
     public:
-        LeafNode(Node<DataType, DistanceFunction> *parentNode, int sz);
+        LeafNode(Object<DataType, DistanceFunction> *parentObject, int sz);
 };
 
 #endif
