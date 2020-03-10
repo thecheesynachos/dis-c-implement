@@ -2,3 +2,4 @@
 mtree_cpp
 .DS_Store
 *.gch
+cmake-build-debug/

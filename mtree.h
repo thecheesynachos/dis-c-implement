@@ -8,89 +8,67 @@ enum Colour {
     GREY = 1,
     WHITE = 2,
 };
-template <
-        typename DataType,
-        typename DistanceFunction
->
+template <typename DataType>
 class Node;
 
-template <
-        typename DataType,
-        typename DistanceFunction
->
+template <typename DataType>
 class RoutingNode;
 
 // OBJECTS
 
-template <
-        typename DataType,
-        typename DistanceFunction
->
+template <typename DataType>
 class Object{
 private:
     DataType *featureObj;
     float distToParent;
     Colour colour;
     float coverRadius;
-    RoutingNode<DataType, DistanceFunction> *childRoot;
-    Node<DataType, DistanceFunction> *containedNode;
+    RoutingNode<DataType> *childRoot;
+    Node<DataType> *containedNode;
 
 public:
-    Object(Node<DataType, DistanceFunction> containedNd, DataType *featureObject, float distanceToParent);
+    Object(Node<DataType> containedNd, DataType *featureObject, float distanceToParent);
 };
 
 
-template <
-        typename DataType,
-        typename DistanceFunction
->
-class RoutingObject : public Object<DataType, DistanceFunction> {
+template <typename DataType>
+class RoutingObject : public Object<DataType> {
 public:
-    RoutingObject(Node<DataType, DistanceFunction> containedNd, DataType *featureObject, float covRad,
-            float distToPar, RoutingNode<DataType, DistanceFunction> chdRoot);
+    RoutingObject(Node<DataType> containedNd, DataType *featureObject, float covRad,
+            float distToPar, RoutingNode<DataType> chdRoot);
 };
 
 // NODE TYPES
 
-template <
-    typename DataType,
-    typename DistanceFunction
->
+template <typename DataType>
 class Node {
 private:
     void split(DataType *newObject);
 
 public:
-    Object<DataType, DistanceFunction> *parent;
+    Object<DataType> *parent;
     bool isLeaf;
     Colour colour;
     int size;
     int filledAmount;
-    std::vector<Object<DataType, DistanceFunction> > storedObjects;
+    std::vector<Object<DataType> > storedObjects;
 
     bool isFilled();
-    Node(Object<DataType, DistanceFunction> *parentObject, int sz);
+    Node(Object<DataType> *parentObject, int sz);
     int range(DataType *object, float searchRadius);
     void insert(DataType *newObject);
 };
 
-template <
-    typename DataType,
-    typename DistanceFunction
-    // typename Node
->
-class RoutingNode : public Node<DataType, DistanceFunction> {
+template <typename DataType>
+class RoutingNode : public Node<DataType> {
     public:
-        RoutingNode(Object<DataType, DistanceFunction> *parentObject, int sz);
+        RoutingNode(Object<DataType> *parentObject, int sz);
 };
 
-template <
-    typename DataType,
-    typename DistanceFunction
->
-class LeafNode : public Node<DataType, DistanceFunction> {
+template <typename DataType>
+class LeafNode : public Node<DataType> {
     public:
-        LeafNode(Object<DataType, DistanceFunction> *parentObject, int sz);
+        LeafNode(Object<DataType> *parentObject, int sz);
 };
 
 #endif
