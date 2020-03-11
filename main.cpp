@@ -7,10 +7,11 @@ int main(int argc, char** argv){
     std::ifstream infile(argv[1]);
 
     for(int i = 0; i < atoi(argv[3]); i++){
-        float data[atoi(argv[2])];
+        std::vector<float> data(atoi(argv[2]),0);
         for(int i =0; i < atoi(argv[2]); i++){
             infile >> data[i];
         }
+        //TODO: insert into tree
         for(int i=0;i<atoi(argv[2]);i++){
         std::cout<< data[i]<<std::endl;
     }
