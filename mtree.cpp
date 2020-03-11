@@ -287,45 +287,53 @@ int Node<DataType>::range(DataType *object, float searchRadius) {
 // Range queries
 // Only returns the size of the ranges
 // Also discards all nodes which are not white
-//template <typename DataType>
-//bool Node<DataType>::colourHelper(DataType *object, float searchRadius) {
-//    int count = 0;
-//    bool noWhites = true;
-//    float objToParent = this->parent->distance(object); // compute distance from object to parent of this node
-//    if (this->isLeaf) {
-//        for (int i = 0; i < this->filledAmount; i++) {
-//            Object<DataType> ro = this->storedObjects[i];
-//            if (ro.colour == WHITE) {
-//                float d = std::abs(objToParent - ro.distToParent);
-//                if (d <= searchRadius) {
-//                    float actualDist = ro.distance(object);  // compute distance between object and ro.object
-//                    if (actualDist <= searchRadius) {
-//                        ro.setColour(GREY);
-//                    } else {
-//                        noWhites = false;
-//                    }
-//                } else {
-//                    noWhites = false;
-//                }
-//            }
-//        }
-//        return noWhites;
-//    } else {
-//        for (int i = 0; i < this->filledAmount; i++) {
-//            Object<DataType> ro = this->storedObjects[i];
-//            if (ro.colour == WHITE) {
-//                float d = std::abs(objToParent - ro.distToParent);
-//                if (d <= searchRadius + ro.coverRadius) {
-//                    float actualDist = ro.distance(object);  // compute distance between object and ro.object
-//                    if (actualDist <= searchRadius + ro.coverRadius) {
-//                        bool noWhiteChild = ro.getChildRoot().colourHelper(object, searchRadius);
-//                        if (noWhiteChild) {
-//                            ro.setColour(GREY);
-//
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+template <typename DataType>
+bool Node<DataType>::colourRange(Object<DataType> *object, float searchRadius) {
+    bool noWhites = true;
+    float objToParent = this->parent->distance(object); // compute distance from object to parent of this node
+    if (this->isLeaf) {
+        for (int i = 0; i < this->filledAmount; i++) {
+            Object<DataType> ro = this->storedObjects[i];
+            if (ro.colour == WHITE) {
+                float d = std::abs(objToParent - ro.distToParent);
+                if (d <= searchRadius) {
+                    float actualDist = ro.distance(object);  // compute distance between object and ro.object
+                    if (actualDist <= searchRadius) {
+                        ro.setColour(GREY);
+                    } else {
+                        noWhites = false;
+                    }
+                } else {
+                    noWhites = false;
+                }
+                if (noWhites) {
+                    ro.setColour(GREY);
+                }
+            }
+        }
+    } else {
+        for (int i = 0; i < this->filledAmount; i++) {
+            Object<DataType> ro = this->storedObjects[i];
+            if (ro.colour == WHITE) {
+                float d = std::abs(objToParent - ro.distToParent);
+                if (d <= searchRadius + ro.coverRadius) {
+                    float actualDist = ro.distance(object);  // compute distance between object and ro.object
+                    if (actualDist <= searchRadius + ro.coverRadius) {
+                        bool noWhiteChild = ro.getChildRoot().colourHelper(object, searchRadius);
+                        if (!noWhiteChild) {
+                            noWhites = false;
+                        }
+                    } else {
+                        noWhites = false;
+                    }
+                } else {
+                    noWhites = false;
+                }
+                if (noWhites) {
+                    ro.setColour(GREY);
+                }
+            }
+        }
+    }
+    return noWhites;
+}

@@ -63,12 +63,11 @@ public:
     int size;
     int filledAmount;
     std::vector<Object<DataType> > storedObjects;
-//    bool colourHelper(DataType *object, float searchRadius);
 
     bool isFilled();
     Node(Object<DataType> *parentObject, int sz);
     int range(DataType *object, float searchRadius);
-//    void colourRange(DataType *object, float searchRadius);
+    bool colourRange(Object<DataType> *object, float searchRadius);
     void insert(DataType *newObject);
     void addObject(Object<DataType> obj);
     void emptyNode();
