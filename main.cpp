@@ -8,8 +8,9 @@
 
 int main(int argc, char** argv){
     std::ifstream infile(argv[1]);
-
-    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(5, euclideanDistance);
+    Object<std::vector<float>> rootObj;
+    // Object<std::vector<float>> *x = &rootObj;
+    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(&rootObj, 5, euclideanDistance);
 
     for(int i = 0; i < atoi(argv[3]); i++){
         std::vector<float> data = std::vector<float>();
@@ -17,12 +18,12 @@ int main(int argc, char** argv){
         for(int i =0; i < atoi(argv[2]); i++){
             infile >> data[i];
         }
-        for(int i=0;i<atoi(argv[2]);i++){
-            std::cout<< data[i]<<" ";
-        }
-        std::cout<<std::endl;
-        Object<std::vector<float> > obj = Object<std::vector<float> >(data);
-        mTree.insert(obj);
+        // for(int i=0;i<atoi(argv[2]);i++){
+        //     std::cout<< data[i]<<" ";
+        // }
+        // std::cout<<std::endl;
+        Object<std::vector<float> > obj = Object<std::vector<float> >(&data);
+        mTree.insert(&obj);
     }
     // std::vector<std::vector<float>> data;
     // std::string temp;

@@ -1,6 +1,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -24,7 +25,7 @@ class LeafNode;
 template <typename DataType>
 class Object{
 private:
-    DataType featureObj;
+    DataType *featureObj;
     float distToParent;
     Colour colour;
     float coverRadius;
@@ -33,6 +34,15 @@ private:
 //    std::function<float (DataType, DataType)> distanceFunction;
 
 public:
+    Object() {
+        featureObj = nullptr;
+        colour = WHITE;
+        distToParent = 0.0;
+        containedNode = nullptr;
+        coverRadius = 0.0;
+        childRoot = nullptr;
+    }
+
     Object(DataType *featureObject, float distanceToParent) :
         featureObj(featureObject), distToParent(distanceToParent), colour(WHITE) {
         containedNode = nullptr;
@@ -47,11 +57,11 @@ public:
             childRoot = nullptr;
     }
 
-//    float distance(Object<DataType> &o1) {
+//    float distance(Object<DataType> *o1) {
 //        return this->distanceFunction(this->featureObj, o1.featureObj);
 //    }
 //
-//    float distance(DataType &d1) {
+//    float distance(DataType *d1) {
 //        return this->distanceFunction(this->featureObj, d1);
 //    }
 
@@ -67,8 +77,8 @@ public:
         return this->containedNode;
     }
 
-    void setContainedNode(Node<DataType> &nd) {
-        this->containedNode = &nd;
+    void setContainedNode(Node<DataType> *nd) {
+        this->containedNode = *nd;
     }
 
     void setDistanceToParent(float dist) {
@@ -83,7 +93,7 @@ public:
         this->coverRadius = covRad;
     }
 
-    void replaceObjectWith(Object<DataType> &newObj, Node<DataType> &nodeAdded) {
+    void replaceObjectWith(Object<DataType> *newObj, Node<DataType> *nodeAdded) {
         this->featureObj = newObj.featureObj;
         this->distToParent = nodeAdded.distance(nodeAdded.parent, newObj);
         this->colour = WHITE;
@@ -115,7 +125,7 @@ public:
 template <typename DataType>
 class Node {
 private:
-    void split(Object<DataType> &newObject) {
+    void split(Object<DataType> *newObject) {
         Object<DataType> parentObj = *(this->parent);
         this->storedObjects.push_back(newObject);
 
@@ -167,23 +177,23 @@ public:
     bool isFilled() {
         return this->filledAmount >= this->size;
     }
-
-    float distance(Object<DataType> &o1, Object<DataType> &o2) {
-        return this->distanceFunction(o1.getFeatureObj(), o2.getFeatureObj());
+    
+    float distance(Object<DataType> *o1, Object<DataType> *o2) {
+        return this->distanceFunction(o1->getFeatureObj(), o2->getFeatureObj());
     }
 
-    float distance(Object<DataType> &o1, DataType &o2) {
-        return this->distanceFunction(o1.getFeatureObj(), o2);
-    }
+    // float distance(Object<DataType> *o1, DataType *o2) {
+    //     return this->distanceFunction(o1.getFeatureObj(), o2);
+    // }
 
-    Node(Object<DataType> &parentObject, int sz, float f(DataType, DataType)) :
+    Node(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
             parent(parentObject), colour(WHITE), size(sz), filledAmount(0), distanceFunction(f)
     {
         this->storedObjects = std::vector<std::reference_wrapper<Object<DataType> > >();
         this->storedObjects.reserve(sz+1);
     }
 
-    int range(DataType &object, float searchRadius) {
+    int range(DataType *object, float searchRadius) {
         int count = 0;
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
@@ -216,7 +226,7 @@ public:
         return count;
     }
 
-    bool colourRange(Object<DataType> &object, float searchRadius) {
+    bool colourRange(Object<DataType> *object, float searchRadius) {
         bool noWhites = true;
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
@@ -266,7 +276,7 @@ public:
         return noWhites;
     }
 
-    void insert(Object<DataType> &newObject) {
+    void insert(Object<DataType> *newObject) {
         if(! this->isLeaf){
             float minCov = MAXFLOAT;
             int posCov = -1;
@@ -305,7 +315,7 @@ public:
         }
     }
 
-    void addObject(Object<DataType> &obj) {
+    void addObject(Object<DataType> *obj) {
         if (this->filledAmount < this->size) {
             this->filledAmount++;
             this->storedObjects.push_back(obj);
@@ -331,7 +341,7 @@ public:
 template <typename DataType>
 class RoutingNode : public Node<DataType> {
     public:
-        RoutingNode(Object<DataType> &parentObject, int sz, float f(DataType, DataType)) :
+        RoutingNode(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
                 Node<DataType>(parentObject, sz, f)
         {
             this->isLeaf = false;
@@ -341,7 +351,7 @@ class RoutingNode : public Node<DataType> {
 template <typename DataType>
 class LeafNode : public Node<DataType> {
     public:
-       LeafNode(Object<DataType> &parentObject, int sz, float f(DataType, DataType)) :
+       LeafNode(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
                Node<DataType>(parentObject, sz, f)
        {
            this->isLeaf = true;
@@ -356,8 +366,8 @@ class LeafNode : public Node<DataType> {
 };
 
 template <typename DataType>
-void partition(Node<DataType> &nd1, Node<DataType> &nd2, Object<DataType> &o1, Object<DataType> &o2,
-               std::vector<std::reference_wrapper<Object<DataType> > > &objects, int sz){
+void partition(Node<DataType> *nd1, Node<DataType> *nd2, Object<DataType> *o1, Object<DataType> *o2,
+               std::vector<std::reference_wrapper<Object<DataType> > > *objects, int sz){
     float maxDist1 = 0.0;
     float maxDist2 = 0.0;
     for (int i = 0; i < sz + 1; i++) {
