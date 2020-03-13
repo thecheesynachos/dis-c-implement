@@ -57,6 +57,10 @@ public:
             childRoot = nullptr;
     }
 
+    ~Object() {
+        delete this->childRoot;
+    }
+
 //    float distance(Object<DataType> *o1) {
 //        return this->distanceFunction(this->featureObj, o1.featureObj);
 //    }
@@ -65,7 +69,7 @@ public:
 //        return this->distanceFunction(this->featureObj, d1);
 //    }
 
-    DataType getFeatureObj(){
+    DataType *getFeatureObj(){
         return this->featureObj;
     }
 
@@ -78,7 +82,7 @@ public:
     }
 
     void setContainedNode(Node<DataType> *nd) {
-        this->containedNode = *nd;
+        this->containedNode = nd;
     }
 
     void setDistanceToParent(float dist) {
@@ -93,12 +97,13 @@ public:
         this->coverRadius = covRad;
     }
 
-    void replaceObjectWith(Object<DataType> *newObj, Node<DataType> *nodeAdded) {
-        this->featureObj = newObj.featureObj;
-        this->distToParent = nodeAdded.distance(nodeAdded.parent, newObj);
+    void replaceObjectWith(Object<DataType> *newObj) {
+        Node<DataType> *nodeAdded = this->getContainedNode();
+        this->featureObj = newObj->featureObj;
+        this->distToParent = nodeAdded->distance(nodeAdded->parent, newObj);
         this->colour = WHITE;
-        this->coverRadius = newObj.coverRadius;
-        this->childRoot = newObj.childRoot;
+        this->coverRadius = newObj->coverRadius;
+        this->childRoot = newObj->childRoot;
     }
 
     void setColour(Colour c) {
@@ -112,11 +117,15 @@ template <typename DataType>
 class RoutingObject : public Object<DataType> {
 public:
     RoutingObject(DataType *featureObject, float covRad, float distToPar,
-            float f(DataType, DataType), Node<DataType> chdRoot) :
+            float (*f)(DataType, DataType), Node<DataType> *chdRoot) :
             Object<DataType>(featureObject, distToPar, f)
     {
         this->coverRadius = covRad;
         this->childRoot = chdRoot;
+    }
+
+    ~RoutingObject() {
+        delete this->childRoot;
     }
 };
 
@@ -126,8 +135,8 @@ template <typename DataType>
 class Node {
 private:
     void split(Object<DataType> *newObject) {
-        Object<DataType> parentObj = *(this->parent);
-        this->storedObjects.push_back(newObject);
+        Object<DataType> *parentObj = this->parent;
+        this->storedObjects->push_back(newObject);
 
         // selection of new pivot nodes to be added
         int rand1 = 0;
@@ -136,18 +145,18 @@ private:
             rand1 = std::rand() % (this->size + 1);
             rand2 = std::rand() % (this->size + 1);
         }
-        Object<DataType> o1 = this->storedObjects.at(rand1);
-        Object<DataType> o2 = this->storedObjects.at(rand2);
+        Object<DataType> *o1 = this->storedObjects->at(rand1);
+        Object<DataType> *o2 = this->storedObjects->at(rand2);
 
         // partition and redivide
         if (this->isLeaf) {
-            Node<DataType> nd1 = LeafNode<DataType>(o1, this->size, this->distanceFunction);
-            Node<DataType> nd2 = LeafNode<DataType>(o2, this->size, this->distanceFunction);
+            Node<DataType> *nd1 = new LeafNode<DataType>(o1, this->size, this->distanceFunction);
+            Node<DataType> *nd2 = new LeafNode<DataType>(o2, this->size, this->distanceFunction);
             partition(nd1, nd2, o1, o2, this->storedObjects, this->size);
             this->convertToRoutingNode();
         } else {
-            Node<DataType> nd1 = RoutingNode<DataType>(o1, this->size, this->distanceFunction);
-            Node<DataType> nd2 = RoutingNode<DataType>(o2, this->size, this->distanceFunction);
+            Node<DataType> *nd1 = new RoutingNode<DataType>(o1, this->size, this->distanceFunction);
+            Node<DataType> *nd2 = new RoutingNode<DataType>(o2, this->size, this->distanceFunction);
             partition(nd1, nd2, o1, o2, this->storedObjects, this->size);
         }
         this->emptyNode();
@@ -155,11 +164,11 @@ private:
             this->addObject(o1);
             this->addObject(o2);
         } else {
-            parentObj.replaceObjectWith(o1);
-            if (this->parent->getContainedNode().isFilled()) {
-                this->parent->getContainedNode().split(o2);
+            parentObj->replaceObjectWith(o1);
+            if (this->parent->getContainedNode()->isFilled()) {
+                this->parent->getContainedNode()->split(o2);
             } else {
-                this->parent->getContainedNode().addObject(o2);
+                this->parent->getContainedNode()->addObject(o2);
             }
         }
     }
@@ -171,26 +180,36 @@ public:
     Colour colour;
     int size;
     int filledAmount;
-    std::vector<std::reference_wrapper<Object<DataType> > > storedObjects;
-    std::function<float (DataType, DataType)> distanceFunction;
+    std::vector<Object<DataType>* > *storedObjects;
+    float (*distanceFunction)(DataType*, DataType*);
 
     bool isFilled() {
         return this->filledAmount >= this->size;
     }
     
     float distance(Object<DataType> *o1, Object<DataType> *o2) {
-        return this->distanceFunction(o1->getFeatureObj(), o2->getFeatureObj());
+        if (!o1 || !o2){
+            return 0.0;
+        } else {
+            return this->distanceFunction(o1->getFeatureObj(), o2->getFeatureObj());
+        }
     }
 
     // float distance(Object<DataType> *o1, DataType *o2) {
     //     return this->distanceFunction(o1.getFeatureObj(), o2);
     // }
 
-    Node(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
+    Node(Object<DataType> *parentObject, int sz, float (*f)(DataType*, DataType*)) :
             parent(parentObject), colour(WHITE), size(sz), filledAmount(0), distanceFunction(f)
     {
-        this->storedObjects = std::vector<std::reference_wrapper<Object<DataType> > >();
-        this->storedObjects.reserve(sz+1);
+        this->storedObjects = new std::vector<Object<DataType>* >();
+        this->storedObjects->reserve(sz+1);
+    }
+
+    ~Node() {
+        for (int i = 0; i < storedObjects->size(); i++) {
+            delete storedObjects->at(i);
+        }
     }
 
     int range(DataType *object, float searchRadius) {
@@ -198,9 +217,9 @@ public:
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
             for (int i = 0; i < this->filledAmount; i++) {
-                Object<DataType> ro = this->storedObjects[i];
-                if (ro.colour == WHITE) {
-                    float d = std::abs(objToParent - ro.distToParent);
+                Object<DataType> *ro = this->storedObjects[i];
+                if (ro->colour == WHITE) {
+                    float d = std::abs(objToParent - ro->distToParent);
                     if (d <= searchRadius) {
                         float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                         if (actualDist <= searchRadius) {
@@ -211,13 +230,13 @@ public:
             }
         } else {
             for (int i = 0; i < this->filledAmount; i++) {
-                Object<DataType> ro = this->storedObjects[i];
-                if (ro.colour == WHITE) {
-                    float d = std::abs(objToParent - ro.distToParent);
-                    if (d <= searchRadius + ro.coverRadius) {
+                Object<DataType> *ro = this->storedObjects[i];
+                if (ro->colour == WHITE) {
+                    float d = std::abs(objToParent - ro->distToParent);
+                    if (d <= searchRadius + ro->coverRadius) {
                         float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
-                        if (actualDist <= searchRadius + ro.coverRadius) {
-                            count += ro.getChildRoot()->range(object, searchRadius);
+                        if (actualDist <= searchRadius + ro->coverRadius) {
+                            count += ro->getChildRoot()->range(object, searchRadius);
                         }
                     }
                 }
@@ -231,13 +250,13 @@ public:
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
             for (int i = 0; i < this->filledAmount; i++) {
-                Object<DataType> ro = this->storedObjects[i];
-                if (ro.colour == WHITE) {
-                    float d = std::abs(objToParent - ro.distToParent);
+                Object<DataType> *ro = this->storedObjects[i];
+                if (ro->colour == WHITE) {
+                    float d = std::abs(objToParent - ro->distToParent);
                     if (d <= searchRadius) {
                         float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                         if (actualDist <= searchRadius) {
-                            ro.setColour(GREY);
+                            ro->setColour(GREY);
                         } else {
                             noWhites = false;
                         }
@@ -245,19 +264,19 @@ public:
                         noWhites = false;
                     }
                     if (noWhites) {
-                        ro.setColour(GREY);
+                        ro->setColour(GREY);
                     }
                 }
             }
         } else {
             for (int i = 0; i < this->filledAmount; i++) {
-                Object<DataType> ro = this->storedObjects[i];
-                if (ro.colour == WHITE) {
-                    float d = std::abs(objToParent - ro.distToParent);
-                    if (d <= searchRadius + ro.coverRadius) {
+                Object<DataType> *ro = this->storedObjects[i];
+                if (ro->colour == WHITE) {
+                    float d = std::abs(objToParent - ro->distToParent);
+                    if (d <= searchRadius + ro->coverRadius) {
                         float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
-                        if (actualDist <= searchRadius + ro.coverRadius) {
-                            bool noWhiteChild = ro.getChildRoot().colourHelper(object, searchRadius);
+                        if (actualDist <= searchRadius + ro->coverRadius) {
+                            bool noWhiteChild = ro->getChildRoot().colourHelper(object, searchRadius);
                             if (!noWhiteChild) {
                                 noWhites = false;
                             }
@@ -268,7 +287,7 @@ public:
                         noWhites = false;
                     }
                     if (noWhites) {
-                        ro.setColour(GREY);
+                        ro->setColour(GREY);
                     }
                 }
             }
@@ -283,9 +302,9 @@ public:
             float min = MAXFLOAT;
             int pos = -1;
             for(int i = 0; i < filledAmount; i++){
-                float dist = this->distance(newObject, this->storedObjects[i].get());  // distance function access
+                float dist = this->distance(newObject, this->storedObjects->at(i));  // distance function access
                 //find min distance in cover radius
-                if(dist < this->storedObjects[i].get().getCoverRadius()){
+                if(dist < this->storedObjects->at(i)->getCoverRadius()){
                     minCov = dist < minCov ? dist:minCov;
                     posCov = dist <= minCov ? i:posCov;
                 }
@@ -295,13 +314,13 @@ public:
             }
             //if exist a radius that cover object
             if(posCov != -1){
-                this->storedObjects[posCov].get().getChildRoot()->insert(newObject);
+                this->storedObjects->at(pos)->getChildRoot()->insert(newObject);
             }
                 //No node cover our new object, use min distance
             else{
                 //set new cover radius for the closest node
-                this->storedObjects.at(pos).get().setCoverRadius(min);
-                this->storedObjects.at(pos).get().getChildRoot()->insert(newObject);
+                this->storedObjects->at(pos)->setCoverRadius(min);
+                this->storedObjects->at(pos)->getChildRoot()->insert(newObject);
             }
         }
         else{
@@ -318,16 +337,16 @@ public:
     void addObject(Object<DataType> *obj) {
         if (this->filledAmount < this->size) {
             this->filledAmount++;
-            this->storedObjects.push_back(obj);
-            obj.setContainedNode(*this);
-            obj.setDistanceToParent(this->distance(obj, this->parent));
+            this->storedObjects->push_back(obj);
+            obj->setContainedNode(this);
+            obj->setDistanceToParent(this->distance(obj, this->parent));
         } else {
-            throw std::exception();
+            throw std::runtime_error(std::string("Node is full"));
         }
     }
 
     void emptyNode() {
-        this->storedObjects.empty();
+        this->storedObjects->empty();
         this->filledAmount = 0;
     }
 
@@ -341,53 +360,65 @@ public:
 template <typename DataType>
 class RoutingNode : public Node<DataType> {
     public:
-        RoutingNode(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
+        RoutingNode(Object<DataType> *parentObject, int sz, float (*f)(DataType*, DataType*)) :
                 Node<DataType>(parentObject, sz, f)
         {
             this->isLeaf = false;
         }
+
+    ~RoutingNode() {
+        for (int i = 0; i < this->storedObjects->size(); i++) {
+            delete this->storedObjects->at(i);
+        }
+    }
 };
 
 template <typename DataType>
 class LeafNode : public Node<DataType> {
     public:
-       LeafNode(Object<DataType> *parentObject, int sz, float f(DataType, DataType)) :
+       LeafNode(Object<DataType> *parentObject, int sz, float (*f)(DataType*, DataType*)) :
                Node<DataType>(parentObject, sz, f)
        {
            this->isLeaf = true;
        }
 
-       LeafNode(int sz, float f(DataType, DataType)) :
+       LeafNode(int sz, float (*f)(DataType*, DataType*)) :
             Node<DataType>(nullptr, sz, f)
        {
            this->isLeaf = true;
        }
 
+        ~LeafNode() {
+            for (int i = 0; i < this->storedObjects->size(); i++) {
+                delete this->storedObjects->at(i);
+            }
+        }
+
 };
 
 template <typename DataType>
 void partition(Node<DataType> *nd1, Node<DataType> *nd2, Object<DataType> *o1, Object<DataType> *o2,
-               std::vector<std::reference_wrapper<Object<DataType> > > *objects, int sz){
+               std::vector<Object<DataType>* > *objects, int sz){
     float maxDist1 = 0.0;
     float maxDist2 = 0.0;
     for (int i = 0; i < sz + 1; i++) {
-        Object<DataType> obj = objects.at(i);
-        float d1 = nd1.distance(obj, o1);
-        float d2 = nd2.distance(obj, o2);
+        Object<DataType> *obj = objects->at(i);
+        float d1 = nd1->distance(obj, o1);
+        float d2 = nd2->distance(obj, o2);
         if (d1 < d2) {
-            nd1.addObject(obj);
+            nd1->addObject(obj);
             if (d1 > maxDist1) {
                 maxDist1 = d1;
             }
         } else {
-            nd2.addObject(obj);
+            nd2->addObject(obj);
             if (d2 > maxDist2) {
                 maxDist2 = d2;
             }
         }
     }
-    o1.setCoverRadius(maxDist1);
-    o2.setCoverRadius(maxDist2);
+    o1->setCoverRadius(maxDist1);
+    o2->setCoverRadius(maxDist2);
 }
 
 #endif

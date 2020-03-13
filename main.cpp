@@ -8,20 +8,26 @@
 
 int main(int argc, char** argv){
     std::ifstream infile(argv[1]);
-    Object<std::vector<float>> rootObj;
+    int dims = atoi(argv[2]);
+    int count = atoi(argv[3]);
     // Object<std::vector<float>> *x = &rootObj;
-    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(&rootObj, 5, euclideanDistance);
+    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(5, &euclideanDistance);
+    std::vector<std::vector<float> > *datapoints = new std::vector<std::vector<float> >();
+    datapoints->reserve(count);
 
-    for(int i = 0; i < atoi(argv[3]); i++){
+    for(int i = 0; i < count; i++){
         std::vector<float> data = std::vector<float>();
-        data.reserve(atoi(argv[2]));
-        for(int i =0; i < atoi(argv[2]); i++){
-            infile >> data[i];
+        data.reserve(dims);
+        int j;
+        for(int i =0; i < dims; i++){
+            infile >> j;
+            data.push_back(j);
         }
         // for(int i=0;i<atoi(argv[2]);i++){
         //     std::cout<< data[i]<<" ";
         // }
         // std::cout<<std::endl;
+        datapoints->push_back(data);
         Object<std::vector<float> > obj = Object<std::vector<float> >(&data);
         mTree.insert(&obj);
     }
@@ -35,5 +41,10 @@ int main(int argc, char** argv){
 
     //     data.push_back(line);
     // }
+    delete &mTree;
+    for (int i = 0; i < count; i++) {
+        delete &(datapoints->at(i));
+    }
+    delete datapoints;
     return 0;
 }
