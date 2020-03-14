@@ -77,6 +77,10 @@ public:
         return this->childRoot;
     }
 
+    void setChildRoot(Node<DataType> *rt) {
+        this->childRoot = rt;
+    }
+
     Node<DataType> *getContainedNode()  {
         return this->containedNode;
     }
@@ -135,6 +139,10 @@ template <typename DataType>
 class Node {
 private:
     void split(Object<DataType> *newObject) {
+//        std::cout<< "split";
+//        for (int i = 0; i < this->storedObjects->size(); i++){
+//            std::cout<< storedObjects->at(i)->getFeatureObj()->at(0) << std::endl;;
+//        }
         Object<DataType> *parentObj = this->parent;
         this->storedObjects->push_back(newObject);
 
@@ -150,14 +158,18 @@ private:
 
         // partition and redivide
         if (this->isLeaf) {
-            Node<DataType> *nd1 = new LeafNode<DataType>(o1, this->size, this->distanceFunction);
-            Node<DataType> *nd2 = new LeafNode<DataType>(o2, this->size, this->distanceFunction);
+            LeafNode<DataType> *nd1 = new LeafNode<DataType>(o1, this->size, this->distanceFunction);
+            LeafNode<DataType> *nd2 = new LeafNode<DataType>(o2, this->size, this->distanceFunction);
             partition(nd1, nd2, o1, o2, this->storedObjects, this->size);
+            o1->setChildRoot(nd1);
+            o2->setChildRoot(nd2);
             this->convertToRoutingNode();
         } else {
-            Node<DataType> *nd1 = new RoutingNode<DataType>(o1, this->size, this->distanceFunction);
-            Node<DataType> *nd2 = new RoutingNode<DataType>(o2, this->size, this->distanceFunction);
+            RoutingNode<DataType> *nd1 = new RoutingNode<DataType>(o1, this->size, this->distanceFunction);
+            RoutingNode<DataType> *nd2 = new RoutingNode<DataType>(o2, this->size, this->distanceFunction);
             partition(nd1, nd2, o1, o2, this->storedObjects, this->size);
+            o1->setChildRoot(nd1);
+            o2->setChildRoot(nd2);
         }
         this->emptyNode();
         if (this->parent == nullptr) {
@@ -296,7 +308,11 @@ public:
     }
 
     void insert(Object<DataType> *newObject) {
-        if(! this->isLeaf){
+//        std::cout<< "insert";
+//        for (int i = 0; i < this->storedObjects->size(); i++){
+//            std::cout<< storedObjects->at(i)->getFeatureObj() << std::endl;;
+//        }
+        if(!(this->isLeaf)){
             float minCov = MAXFLOAT;
             int posCov = -1;
             float min = MAXFLOAT;
@@ -343,6 +359,10 @@ public:
         } else {
             throw std::runtime_error(std::string("Node is full"));
         }
+    }
+
+    void addObject(Object<DataType> *obj, float d1, float d2) {
+        this->addObject(obj);
     }
 
     void emptyNode() {
@@ -399,6 +419,7 @@ class LeafNode : public Node<DataType> {
 template <typename DataType>
 void partition(Node<DataType> *nd1, Node<DataType> *nd2, Object<DataType> *o1, Object<DataType> *o2,
                std::vector<Object<DataType>* > *objects, int sz){
+//    std::cout<< "partition";
     float maxDist1 = 0.0;
     float maxDist2 = 0.0;
     for (int i = 0; i < sz + 1; i++) {
@@ -406,12 +427,12 @@ void partition(Node<DataType> *nd1, Node<DataType> *nd2, Object<DataType> *o1, O
         float d1 = nd1->distance(obj, o1);
         float d2 = nd2->distance(obj, o2);
         if (d1 < d2) {
-            nd1->addObject(obj);
+            nd1->addObject(obj, d1, d2);
             if (d1 > maxDist1) {
                 maxDist1 = d1;
             }
         } else {
-            nd2->addObject(obj);
+            nd2->addObject(obj, d1, d2);
             if (d2 > maxDist2) {
                 maxDist2 = d2;
             }

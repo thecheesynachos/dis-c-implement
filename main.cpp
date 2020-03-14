@@ -11,25 +11,26 @@ int main(int argc, char** argv){
     int dims = atoi(argv[2]);
     int count = atoi(argv[3]);
     // Object<std::vector<float>> *x = &rootObj;
-    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(5, &euclideanDistance);
-    std::vector<std::vector<float> > *datapoints = new std::vector<std::vector<float> >();
+    LeafNode<std::vector<float> > mTree = LeafNode<std::vector<float> >(3, &euclideanDistance);
+    std::vector<std::vector<float>* > *datapoints = new std::vector<std::vector<float>* >();
     datapoints->reserve(count);
 
     for(int i = 0; i < count; i++){
-        std::vector<float> data = std::vector<float>();
-        data.reserve(dims);
-        int j;
+        std::vector<float> *data = new std::vector<float>();
+        data->reserve(dims);
+        float j;
         for(int i =0; i < dims; i++){
             infile >> j;
-            data.push_back(j);
+            data->push_back(j);
         }
-        // for(int i=0;i<atoi(argv[2]);i++){
-        //     std::cout<< data[i]<<" ";
-        // }
-        // std::cout<<std::endl;
+         for(int i=0;i<dims;i++){
+             std::cout << data->at(i) <<" ";
+         }
+         std::cout<<std::endl;
+
         datapoints->push_back(data);
-        Object<std::vector<float> > obj = Object<std::vector<float> >(&data);
-        mTree.insert(&obj);
+        Object<std::vector<float> > *obj = new Object<std::vector<float> >(data);
+        mTree.insert(obj);
     }
     // std::vector<std::vector<float>> data;
     // std::string temp;
