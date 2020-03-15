@@ -15,6 +15,7 @@ float euclideanDistance(std::vector<float> *dataA, std::vector<float> *dataB){
         float sumSq = 0;
         for (int i = 0; i < s; i++) {
             float x = dataA->at(i) - dataB->at(i);
+//            std::cout<< dataA->at(i) << " hi " << dataB->at(i) << std::endl;
             sumSq += x * x;
         }
         return sqrt(sumSq);
