@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <functional>
+#include <set>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -306,7 +307,59 @@ public:
         }
         return noWhites;
     }
-
+    void bulkInsert(std::vector<DataType*> *objects){
+        //inserting object is less than object size
+        if(objects->size() <= this->size){
+            //create objects for leaf node
+            this->isLeaf = true;
+            //iterate add object to leaf node
+            for (Datatype::iterator it = objects->begin(); it != objects->end(); ++it){
+                this->addObject(new Object<DataType>(it));
+            }
+        }
+        else{
+            // std::vector<int> initial(this->size, 0);
+            std::set<int, std::greater<int>> initial;
+            //generate random index
+            while(initial.size() != this->size){
+                int rand =  std::rand() % (objects->size());
+                if(!initial.contains(rand)){
+                    initial.insert(rand);
+                }
+            }
+            //create initial node
+            for (int elm : initial){
+                //add random picked elm as routingObj
+                RoutingObject<DataType> toAdd = new RoutingObject<DataType>(objects[elm], 0.0, this->distanceFunction(this->parent->featureObj, objects[elm]), this->distanceFunction, nullptr);
+                toAdd->setChildRoot(new Node(toAdd, this->size, this->distanceFunction));
+                this->addObject(toAdd);
+            }
+            std::vector<std::vector<DataType*>*> partition = new std::vector<std::vector<DataType*>*>(this->size, nullptr);
+            for(int i=0; i < this->size; i++){
+                std::vector<DataType*> *subPar = new std::vector<DataType*>();
+                partition[i] = subPar;
+            }
+            for (Datatype::iterator it = objects->begin(); it != objects->end(); ++it){
+                float min = MAXFLOAT;
+                int idx = -1;
+                for(int i = 0; i < this->size; i++){
+                    float dist = this -> distanceFunction(it, this->storedObjects[i]->featuredObject);
+                    idx = dist < min ? i:idx;
+                    min = dist < min ? dist:min;
+                }
+                partition[idx].add(it);
+                    //insert to the nearest spot
+                    //call recursively
+            }
+            //might be able to parallel here
+            for (int i = 0; i < this->size; i++){
+                this->storedObjects[i]->childRoot->bulkInsert(partition[i]);
+                //free
+                delete partition[i];
+            }
+            delete partition;
+        }
+    }
     void insert(Object<DataType> *newObject) {
 //        std::cout<< "insert";
 //        for (int i = 0; i < this->storedObjects->size(); i++){
@@ -374,7 +427,7 @@ public:
         this->isLeaf = false;
     }
 
-    void buildFromBulk(std::vector<DataType> objects);
+    // void buildFromBulk(std::vector<DataType> objects);
 };
 
 template <typename DataType>
