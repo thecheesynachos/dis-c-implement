@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <functional>
+#include <algorithm>
+#include <random>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -196,12 +198,16 @@ private:
         partition(nd1, nd2, o1, o2, ro1, ro2, objectsList);
 
         if (parentObj == nullptr) {
+            this->convertToRoutingNode();
             this->storedObjects->clear();
             this->addObject(ro1);
             this->addObject(ro2);
-            this->convertToRoutingNode();
 //            std::cout << "a " << ro1->getFeatureObj() << " " << ro2->getFeatureObj() << std::endl;
         } else {
+//            float d = this->distance(parentObj, newObject);
+//            if (parentObj->getCoverRadius() < d) {
+//                parentObj->setCoverRadius(d);
+//            }
             Node<DataType> *parentNode = parentObj->getContainedNode();
             parentNode->removeObject(parentObj);
             parentNode->addObject(ro1);
@@ -311,8 +317,7 @@ public:
                     } else {
                         float d = std::abs(objToParent - ro->getDistanceToParent());
                         if (d <= searchRadius + ro->getCoverRadius() + EPSILON) {
-                            float actualDist = this->distance(ro,
-                                                              object);  // compute distance between object and ro.object
+                            float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                             if (actualDist <= searchRadius + ro->getCoverRadius() + EPSILON) {
                                 count += ro->getChildRoot()->range(object, searchRadius);
                             }
@@ -342,9 +347,6 @@ public:
                     } else {
                         noWhites = false;
                     }
-                    if (noWhites) {
-                        ro->setColour(GREY);
-                    }
                 }
             }
         } else {
@@ -359,8 +361,7 @@ public:
                     } else {
                         float d = std::abs(objToParent - ro->getDistanceToParent());
                         if (d <= searchRadius + ro->getCoverRadius()) {
-                            float actualDist = this->distance(ro,
-                                                              object);  // compute distance between object and ro.object
+                            float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                             if (actualDist <= searchRadius + ro->getCoverRadius() + EPSILON) {
                                 bool noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
                                 if (!noWhiteChild) {
@@ -385,6 +386,53 @@ public:
         return noWhites;
     }
 
+    void bulkInsert(std::vector<DataType*> *objects){
+        //inserting object is less than object size
+        if(objects->size() <= this->size){
+            //create objects for leaf node
+            this->isLeaf = true;
+            //iterate add object to leaf node
+            for (int i = 0; i < objects->size(); i++){
+                this->addObject(new Object<DataType>(objects->at(i)));
+            }
+        } else{
+            this->isLeaf = false;
+            std::random_shuffle(objects->begin(), objects->end());
+            //create initial node
+            for (int i = 0; i < this->size; i++){
+                //add random picked elm as routingObj
+                RoutingObject<DataType> *toAdd = new RoutingObject<DataType>(
+                        objects->at(i), 0.0, this->distance(this->parent, objects->at(i)), nullptr);
+                toAdd->setChildRoot(new RoutingNode<DataType>(toAdd, this->size, this->distanceFunction));
+                this->addObject(toAdd);
+            }
+            std::vector<std::vector<DataType*>*> partition = std::vector<std::vector<DataType*>*>();
+            partition.reserve(this->size);
+            for(int i=0; i < this->size; i++){
+                std::vector<DataType*> *subPar = new std::vector<DataType*>();
+                partition.push_back(subPar);
+            }
+            for (int i = 0; i < objects->size(); i++){
+                float min = MAXFLOAT;
+                int idx = -1;
+                for(int j = 0; j < this->size; j++){
+                    float dist = this->distance(this->storedObjects->at(j), objects->at(i));
+                    idx = dist < min ? j:idx;
+                    min = dist < min ? dist:min;
+                }
+                partition.at(idx)->push_back(objects->at(i));
+                if (min > this->storedObjects->at(idx)->getCoverRadius()) {
+                    this->storedObjects->at(idx)->setCoverRadius(min);
+                }
+            }
+            //might be able to parallel here
+            for (int i = 0; i < this->size; i++){
+                this->storedObjects->at(i)->getChildRoot()->bulkInsert(partition[i]);
+                //free
+                delete partition.at(i);
+            }
+        }
+    }
     void insert(Object<DataType> *newObject) {
 //        std::cout<< "insert " << this << std::endl;
 //        std::cout<< "size" << this->storedObjects->size() << std::endl;
@@ -399,7 +447,7 @@ public:
                 //find min distance in cover radius
                 if(dist <= this->storedObjects->at(i)->getCoverRadius()){
                     posCov = dist <= minCov ? i:posCov;
-                    minCov = dist < minCov ? dist:minCov;
+                    minCov = dist <= minCov ? dist:minCov;
                 }
                 //find min distance
                 pos = dist <= min ? i:pos;
@@ -439,13 +487,13 @@ public:
             this->filledAmount++;
             this->storedObjects->push_back(obj);
             obj->setContainedNode(this);
-            float d = this->distance(obj, this->parent);
-            obj->setDistanceToParent(d);
-//            if (this->parent != nullptr) {
-//                if (this->parent->getCoverRadius() < d) {
-//                    this->parent->setCoverRadius(d);
-//                }
-//            }
+            if (this->parent != nullptr) {
+                float d = this->distance(obj, this->parent);
+                obj->setDistanceToParent(d);
+                if (this->parent->getCoverRadius() < d) {
+                    this->parent->setCoverRadius(d);
+                }
+            }
         } else {
             throw std::runtime_error(std::string("Node is full"));
         }

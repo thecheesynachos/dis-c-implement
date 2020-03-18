@@ -15,6 +15,7 @@ class DisC {
                 Object<DataType> *obj = new Object<DataType>(this->data->at(i));
                 this->mTree->insert(obj);
             }
+//            this->mTree->bulkInsert(data);
         }
 
     public:
@@ -53,10 +54,15 @@ class DisC {
                         }
                     }
                 }
-                isSelected.at(maxIdx) = true;
-                subsetCount++;
-                this->mTree->colourRange(this->data->at(maxIdx), radius);
-                selectedSubset->push_back(this->data->at(maxIdx));
+                if (maxCoverage > 0) {
+                    isSelected.at(maxIdx) = true;
+                    subsetCount++;
+                    this->mTree->colourRange(this->data->at(maxIdx), radius);
+                    selectedSubset->push_back(this->data->at(maxIdx));
+                    std::cout << maxIdx << " " << maxCoverage << std::endl;
+                } else {
+                    break;
+                }
             }
             return selectedSubset;
         }

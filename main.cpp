@@ -4,7 +4,6 @@
 #include <fstream>
 #include <vector>
 #include "disc.h"
-//#include "mtree.h"
 #include "util.cpp"
 
 int main(int argc, char** argv){
