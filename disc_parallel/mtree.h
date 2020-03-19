@@ -4,6 +4,7 @@
 #include <functional>
 #include <algorithm>
 #include <random>
+#include <cilk/cilk.h>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -412,7 +413,7 @@ public:
                 std::vector<DataType*> *subPar = new std::vector<DataType*>();
                 partition.push_back(subPar);
             }
-            for (int i = 0; i < objects->size(); i++){
+            cilk_for (int i = 0; i < objects->size(); i++){
                 float min = MAXFLOAT;
                 int idx = -1;
                 for(int j = 0; j < this->size; j++){
@@ -426,7 +427,7 @@ public:
                 }
             }
             //might be able to parallel here
-            for (int i = 0; i < this->size; i++){
+            cilk_for (int i = 0; i < this->size; i++){
                 this->storedObjects->at(i)->getChildRoot()->bulkInsert(partition[i]);
                 //free
                 delete partition.at(i);
