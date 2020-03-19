@@ -5,4 +5,5 @@ mtree_cpp
 cmake-build-debug/
 *.txt
 main
-main.dSYM/
+*.dSYM/
+disc_*_run

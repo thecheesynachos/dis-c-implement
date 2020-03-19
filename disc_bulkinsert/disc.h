@@ -11,11 +11,11 @@ class DisC {
         float (*distanceFunction)(DataType*, DataType*);
 
         void constructTree() {
-            for (int i = 0; i < this->dataCount; i++) {
-                Object<DataType> *obj = new Object<DataType>(this->data->at(i));
-                this->mTree->insert(obj);
-            }
-//            this->mTree->bulkInsert(data);
+//            for (int i = 0; i < this->dataCount; i++) {
+//                Object<DataType> *obj = new Object<DataType>(this->data->at(i));
+//                this->mTree->insert(obj);
+//            }
+            this->mTree->bulkInsert(data);
         }
 
     public:
@@ -59,7 +59,7 @@ class DisC {
                     subsetCount++;
                     this->mTree->colourRange(this->data->at(maxIdx), radius);
                     selectedSubset->push_back(this->data->at(maxIdx));
-                    std::cout << maxIdx << " " << maxCoverage << std::endl;
+//                    std::cout << maxIdx << " " << maxCoverage << std::endl;
                 } else {
                     break;
                 }
