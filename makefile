@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -Wall -g
+CXX = g++-5
+CXXFLAGS = -Wall -g -std=c++14 -fcilkplus
 
 all: disc_bulkinsert_run disc_singleinsert_run disc_parallel_run
 

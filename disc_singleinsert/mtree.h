@@ -4,6 +4,7 @@
 #include <functional>
 #include <algorithm>
 #include <random>
+#include <cfloat>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -359,21 +360,24 @@ public:
                             noWhites = false;
                         }
                     } else {
+                        bool noWhiteChild;
                         float d = std::abs(objToParent - ro->getDistanceToParent());
                         if (d <= searchRadius + ro->getCoverRadius()) {
                             float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                             if (actualDist <= searchRadius + ro->getCoverRadius() + EPSILON) {
-                                bool noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
+                                noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
                                 if (!noWhiteChild) {
                                     noWhites = false;
                                 }
                             } else {
+                                noWhiteChild = false;
                                 noWhites = false;
                             }
                         } else {
+                            noWhiteChild = false;
                             noWhites = false;
                         }
-                        if (noWhites) {
+                        if (noWhiteChild) {
                             ro->setColour(GREY);
                         }
                     }
@@ -413,7 +417,7 @@ public:
                 partition.push_back(subPar);
             }
             for (int i = 0; i < objects->size(); i++){
-                float min = MAXFLOAT;
+                float min = FLT_MAX;
                 int idx = -1;
                 for(int j = 0; j < this->size; j++){
                     float dist = this->distance(this->storedObjects->at(j), objects->at(i));
@@ -438,9 +442,9 @@ public:
 //        std::cout<< "size" << this->storedObjects->size() << std::endl;
         if(!(this->isLeaf)){
 //            std::cout<< "not leaf"<< " ";
-            float minCov = MAXFLOAT;
+            float minCov = FLT_MAX;
             int posCov = -1;
-            float min = MAXFLOAT;
+            float min = FLT_MAX;
             int pos = -1;
             for(int i = 0; i < this->storedObjects->size(); i++){
                 float dist = this->distance(newObject, this->storedObjects->at(i));  // distance function access

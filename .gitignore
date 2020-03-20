@@ -7,3 +7,4 @@ cmake-build-debug/
 main
 *.dSYM/
 disc_*_run
+Dockerfile
