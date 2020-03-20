@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cilk/cilk_api.h>
 #include "disc.h"
 #include "util.cpp"
 
@@ -12,6 +13,9 @@ int main(int argc, char** argv){
     int count = atoi(argv[3]);
     int sz = atoi(argv[4]);
     float thr = atof(argv[5]);
+
+    __cilkrts_set_param("nworkers", argv[6]);
+
     // Object<std::vector<float>> *x = &rootObj;
 //    LeafNode<std::vector<float> > *mTree = new LeafNode<std::vector<float> >(8, &euclideanDistance);
     std::vector<std::vector<float>* > *datapoints = new std::vector<std::vector<float>* >();
