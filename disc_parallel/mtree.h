@@ -4,7 +4,12 @@
 #include <functional>
 #include <algorithm>
 #include <random>
+#include <cstdio>
 #include <cilk/cilk.h>
+#include <cilk/reducer_opand.h>
+#include <cilk/reducer_opadd.h>
+#include <cilk/reducer_min.h>
+#include <cfloat>
 
 #ifndef MTREE_H
 #define MTREE_H
@@ -294,47 +299,47 @@ public:
     }
 
     int range(DataType *object, float searchRadius) {
-        int count = 0;
+        cilk::reducer< cilk::op_add<int> > count(0);
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
-            for (int i = 0; i < this->storedObjects->size(); i++) {
+            cilk_for (int i = 0; i < this->storedObjects->size(); i++) {
                 Object<DataType> *ro = this->storedObjects->at(i);
                 if (ro->getColour() == WHITE) {
                     float d = std::abs(objToParent - ro->getDistanceToParent());
                     if (d <= searchRadius + EPSILON) {
                         float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                         if (actualDist <= searchRadius) {
-                            count += 1;
+                            *count += 1;
                         }
                     }
                 }
             }
         } else {
-            for (int i = 0; i < this->storedObjects->size(); i++) {
+            cilk_for (int i = 0; i < this->storedObjects->size(); i++) {
                 Object<DataType> *ro = this->storedObjects->at(i);
                 if (ro->getColour() == WHITE) {
                     if (this->parent == nullptr) {
-                        count += ro->getChildRoot()->range(object, searchRadius);
+                        *count += ro->getChildRoot()->range(object, searchRadius);
                     } else {
                         float d = std::abs(objToParent - ro->getDistanceToParent());
                         if (d <= searchRadius + ro->getCoverRadius() + EPSILON) {
                             float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                             if (actualDist <= searchRadius + ro->getCoverRadius() + EPSILON) {
-                                count += ro->getChildRoot()->range(object, searchRadius);
+                                *count += ro->getChildRoot()->range(object, searchRadius);
                             }
                         }
                     }
                 }
             }
         }
-        return count;
+        return count.get_value();
     }
 
     bool colourRange(DataType *object, float searchRadius) {
-        bool noWhites = true;
+        cilk::reducer< cilk::op_and<bool> > noWhites(true);
         float objToParent = this->distance(this->parent, object); // compute distance from object to parent of this node
         if (this->isLeaf) {
-            for (int i = 0; i < this->storedObjects->size(); i++) {
+            cilk_for (int i = 0; i < this->storedObjects->size(); i++) {
                 Object<DataType> *ro = this->storedObjects->at(i);
                 if (ro->getColour() == WHITE) {
                     float d = std::abs(objToParent - ro->getDistanceToParent());
@@ -343,48 +348,51 @@ public:
                         if (actualDist <= searchRadius) {
                             ro->setColour(GREY);
                         } else {
-                            noWhites = false;
+                            *noWhites &= false;
                         }
                     } else {
-                        noWhites = false;
+                        *noWhites &= false;
                     }
                 }
             }
         } else {
-            for (int i = 0; i < this->storedObjects->size(); i++) {
+            cilk_for (int i = 0; i < this->storedObjects->size(); i++) {
                 Object<DataType> *ro = this->storedObjects->at(i);
                 if (ro->getColour() == WHITE) {
                     if (this->parent == nullptr){
                         bool noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
                         if (!noWhiteChild) {
-                            noWhites = false;
+                            *noWhites &= false;
                         }
                     } else {
+                        bool noWhiteChild;
                         float d = std::abs(objToParent - ro->getDistanceToParent());
                         if (d <= searchRadius + ro->getCoverRadius()) {
                             float actualDist = this->distance(ro, object);  // compute distance between object and ro.object
                             if (actualDist <= searchRadius + ro->getCoverRadius() + EPSILON) {
-                                bool noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
+                                noWhiteChild = ro->getChildRoot()->colourRange(object, searchRadius);
                                 if (!noWhiteChild) {
-                                    noWhites = false;
+                                    *noWhites &= false;
                                 }
                             } else {
-                                noWhites = false;
+                                noWhiteChild = false;
+                                *noWhites &= false;
                             }
                         } else {
-                            noWhites = false;
+                            noWhiteChild = false;
+                            *noWhites &= false;
                         }
-                        if (noWhites) {
+                        if (noWhiteChild) {
                             ro->setColour(GREY);
                         }
                     }
                 }
             }
         }
-        if (noWhites) {
+        if (noWhites.get_value()) {
             this->colour = GREY;
         }
-        return noWhites;
+        return noWhites.get_value();
     }
 
     void bulkInsert(std::vector<DataType*> *objects){
@@ -413,17 +421,17 @@ public:
                 std::vector<DataType*> *subPar = new std::vector<DataType*>();
                 partition.push_back(subPar);
             }
-            cilk_for (int i = 0; i < objects->size(); i++){
-                float min = MAXFLOAT;
-                int idx = -1;
-                for(int j = 0; j < this->size; j++){
+            for (int i = 0; i < objects->size(); i++){
+                cilk::reducer<cilk::op_min_index<int, float> > closest;
+                cilk_for(int j = 0; j < this->size; j++){
                     float dist = this->distance(this->storedObjects->at(j), objects->at(i));
-                    idx = dist < min ? j:idx;
-                    min = dist < min ? dist:min;
+                    closest->calc_min(j, dist);
                 }
-                partition.at(idx)->push_back(objects->at(i));
-                if (min > this->storedObjects->at(idx)->getCoverRadius()) {
-                    this->storedObjects->at(idx)->setCoverRadius(min);
+                int minIdx = closest->get_index_reference();
+                int minDis = closest->get_reference();
+                partition.at(minIdx)->push_back(objects->at(i));
+                if (minDis > this->storedObjects->at(minIdx)->getCoverRadius()) {
+                    this->storedObjects->at(minIdx)->setCoverRadius(minDis);
                 }
             }
             //might be able to parallel here
@@ -431,53 +439,6 @@ public:
                 this->storedObjects->at(i)->getChildRoot()->bulkInsert(partition[i]);
                 //free
                 delete partition.at(i);
-            }
-        }
-    }
-    void insert(Object<DataType> *newObject) {
-//        std::cout<< "insert " << this << std::endl;
-//        std::cout<< "size" << this->storedObjects->size() << std::endl;
-        if(!(this->isLeaf)){
-//            std::cout<< "not leaf"<< " ";
-            float minCov = MAXFLOAT;
-            int posCov = -1;
-            float min = MAXFLOAT;
-            int pos = -1;
-            for(int i = 0; i < this->storedObjects->size(); i++){
-                float dist = this->distance(newObject, this->storedObjects->at(i));  // distance function access
-                //find min distance in cover radius
-                if(dist <= this->storedObjects->at(i)->getCoverRadius()){
-                    posCov = dist <= minCov ? i:posCov;
-                    minCov = dist <= minCov ? dist:minCov;
-                }
-                //find min distance
-                pos = dist <= min ? i:pos;
-                min = dist <= min ? dist:min;
-            }
-            //if exist a radius that cover object
-            if(posCov != -1){
-//                std::cout << "insert at a " << posCov << " " << this->storedObjects->size() << std::endl;
-                this->storedObjects->at(posCov)->getChildRoot()->insert(newObject);
-            }
-                //No node cover our new object, use min distance
-            else{
-                //set new cover radius for the closest node
-                this->storedObjects->at(pos)->setCoverRadius(min);
-//                std::cout<< this->storedObjects->at(pos)->getChildRoot() << std::endl;
-//                std::cout << "insert at b " << pos << " " << this->storedObjects->size() << std::endl;
-                this->storedObjects->at(pos)->getChildRoot()->insert(newObject);
-            }
-        }
-        else{
-//            std::cout<< "leaf"<< std::endl;
-            //check for available space
-            if(this->storedObjects->size() < this->size){
-//                std::cout << "insert at c " << this->storedObjects->size() << std::endl;
-                this->addObject(newObject);
-            }
-            else{
-//                std::cout << "split at d " << this->storedObjects->size() << std::endl;
-                this->split(newObject);
             }
         }
     }

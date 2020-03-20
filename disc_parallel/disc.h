@@ -1,6 +1,9 @@
 #include "mtree.h"
 #include <vector>
+#include <cstdio>
+#include <cstdlib>
 #include <cilk/cilk.h>
+#include <cilk/reducer_max.h>
 
 template <typename DataType>
 class DisC {
@@ -48,23 +51,18 @@ class DisC {
                 // int maxCoverage = -1;
                 //change to max_index_reduce
                 //<maxCov, maxIdx>
-                cilk::reducer<cilk::op_max_index<int, int>> max;
+                cilk::reducer<cilk::op_max_index<int, int>> best;
                 cilk_for (int i = 0; i < this->dataCount; i++) {
                     if (!(isSelected.at(i))) {
                         int coverage = this->mTree->range(this->data->at(i), radius);
-                        max->calc_max(i, coverage);
-                        // if (coverage > maxCoverage) {
-                        //     maxCoverage = coverage;
-                        //     maxIdx = i;
-                        // }
+                        best->calc_max(i, coverage);
                     }
                 }
-                cilk_sync;
-                if (maxCoverage > 0) {
-                    isSelected.at(maxIdx) = true;
+                if (best->get_reference() > 0) {
+                    isSelected.at(best->get_index_reference()) = true;
                     subsetCount++;
-                    this->mTree->colourRange(this->data->at(maxIdx), radius);
-                    selectedSubset->push_back(this->data->at(maxIdx));
+                    this->mTree->colourRange(this->data->at(best->get_index_reference()), radius);
+                    selectedSubset->push_back(this->data->at(best->get_index_reference()));
 //                    std::cout << maxIdx << " " << maxCoverage << std::endl;
                 } else {
                     break;
