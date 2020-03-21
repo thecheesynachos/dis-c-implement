@@ -225,7 +225,7 @@ private:
 //            ro1->setFeatureObject(nullptr);
 //            delete ro1;
             this->emptyNode();
-            delete this;
+            delete parentObj;
         }
 
     }
