@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sys/time.h>
 #include "disc.h"
 #include "util.cpp"
 
@@ -45,18 +46,20 @@ int main(int argc, char** argv){
     // disc
     std::cout << std::endl << "DIS C METHOD" << std::endl;
 
-    std::clock_t start;
-    double duration;
+    struct timeval startTime, endTime;
+    long totalTime;
 
-    start = std::clock();
+    gettimeofday(&startTime, NULL);
     DisC<std::vector<float> > *disC = new DisC<std::vector<float> >(datapoints, count, &euclideanDistance, sz);
-    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Time to build tree = " << duration << " seconds" << std::endl;
+    gettimeofday(&endTime, NULL);
+    totalTime =  (endTime.tv_sec - startTime.tv_sec) * 1000000L + (endTime.tv_usec - startTime.tv_usec);
+    std::cout << "Time to build tree = " << (totalTime / 1000L) << " ms" << std::endl;
 
-    start = std::clock();
+    gettimeofday(&startTime, NULL);
     std::vector<std::vector<float>* > *answer = disC->getCover(thr);
-    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-    std::cout << "Time to run GreedySelect = " << duration << " seconds" << std::endl;
+    gettimeofday(&endTime, NULL);
+    totalTime =  (endTime.tv_sec - startTime.tv_sec) * 1000000L + (endTime.tv_usec - startTime.tv_usec);
+    std::cout << "Time to run GreedySelect = " << (totalTime / 1000L) << " ms" << std::endl;
 
     std::cout << std::endl << "DIS C ANSWERS" << std::endl;
     for (int i = 0; i < answer->size(); i++) {
