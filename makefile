@@ -1,5 +1,5 @@
-CXX = g++-5
-CXXFLAGS = -Wall -g -std=c++14 -fcilkplus
+CXX = g++
+CXXFLAGS = -Wall -g -std=c++14
 
 all: disc_bulkinsert_run disc_singleinsert_run disc_parallel_run
 
@@ -10,7 +10,7 @@ disc_singleinsert_run: disc_singleinsert/main.cpp disc_singleinsert/disc.h disc_
 	$(CXX) $(CXXFLAGS) -o disc_singleinsert_run disc_singleinsert/main.cpp
 
 disc_parallel_run: disc_parallel/main.cpp disc_parallel/disc.h disc_parallel/mtree.h disc_parallel/util.cpp
-	$(CXX) $(CXXFLAGS) -o disc_parallel_run disc_parallel/main.cpp
+	$(CXX) $(CXXFLAGS) -fcilkplus -o disc_parallel_run disc_parallel/main.cpp
 
 .PHONY: clean
 
