@@ -429,13 +429,15 @@ public:
                 partition.push_back(subPar);
             }
             for (int i = 0; i < objects->size(); i++){
-                cilk::reducer<cilk::op_min_index<int, float> > closest;
-                cilk_for(int j = 0; j < this->size; j++){
+                int minIdx = -1;
+                float minDis = MAXFLOAT;
+                for(int j = 0; j < this->size; j++){
                     float dist = this->distance(this->storedObjects->at(j), objects->at(i));
-                    closest->calc_min(j, dist);
+                    if (dist < minDis) {
+                        minDis = dist;
+                        minIdx = j;
+                    }
                 }
-                int minIdx = closest->get_index_reference();
-                int minDis = closest->get_reference();
                 partition.at(minIdx)->push_back(objects->at(i));
                 if (minDis > this->storedObjects->at(minIdx)->getCoverRadius()) {
                     this->storedObjects->at(minIdx)->setCoverRadius(minDis);
