@@ -13,13 +13,13 @@ float euclideanDistance(std::vector<float> *dataA, std::vector<float> *dataB){
 
     int s = dataA->size();
     if (s > 0) {
-        cilk::reducer< cilk::op_add<float> > total(0.0);
+        float total = 0.0;
         for (int i = 0; i < s; i++) {
             float x = dataA->at(i) - dataB->at(i);
 //            std::cout<< dataA->at(i) << " hi " << dataB->at(i) << std::endl;
-            *total += x * x;
+            total += x * x;
         }
-        return sqrt(total.get_value());
+        return sqrt(total);
     } else {
         throw std::runtime_error(std::string("Vector for distance has no values"));
     }
