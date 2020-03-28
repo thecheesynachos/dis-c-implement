@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in 50 100 150 200 250 300 350 400
+for i in 20 40 60 80 100 120 140 160 180 200
 do
   mkdir -p result/node_result/n$i
   for k in 0 1 2
