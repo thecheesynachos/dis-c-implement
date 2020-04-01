@@ -12,6 +12,9 @@ disc_singleinsert_run: disc_singleinsert/main.cpp disc_singleinsert/disc.h disc_
 disc_parallel_run: disc_parallel/main.cpp disc_parallel/disc.h disc_parallel/mtree.h disc_parallel/util.cpp
 	$(CXX) $(CXXFLAGS) -fcilkplus -o disc_parallel_run disc_parallel/main.cpp
 
+disc_parallelbeta_run: disc_parallelbeta/main.cpp disc_parallelbeta/disc.h disc_parallelbeta/mtree.h disc_parallelbeta/util.cpp
+    $(CXX) $(CXXFLAGS) -fcilkplus -o disc_parallelbeta_run disc_parallelbeta/main.cpp
+
 .PHONY: clean
 
 clean:
